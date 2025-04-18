@@ -29,12 +29,18 @@ function determinePersonalityType(answers: Record<number, string>): PersonalityT
   });
 
   // Find the category with highest count
-  const maxCategory = Object.entries(categories).reduce((a, b) => 
-    categories[a as keyof typeof categories] > categories[b[0] as keyof typeof categories] ? a : b[0]
-  );
+  let maxCategory: keyof typeof categories = 'entertainment';
+  let maxCount = 0;
+
+  for (const [category, count] of Object.entries(categories)) {
+    if (count > maxCount) {
+      maxCount = count;
+      maxCategory = category as keyof typeof categories;
+    }
+  }
 
   // Map category to personality type
-  const personalityMap: Record<string, PersonalityType> = {
+  const personalityMap: Record<keyof typeof categories, PersonalityType> = {
     news: "The News Junkie",
     entertainment: "The Entertainment Buff",
     tech: "The Tech Insider",
@@ -76,7 +82,7 @@ export function ResultsPage({ answers, onRetake }: ResultsPageProps) {
         <div className="container mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-8">
-              <img src="/yahoo.png" alt="Yahoo" className="h-8" />
+              <img src="/yahoo-svgrepo-com.svg" alt="Yahoo" className="h-20 text-purple-600" style={{ filter: 'invert(24%) sepia(90%) saturate(1582%) hue-rotate(244deg) brightness(84%) contrast(96%)' }} />
               <div className="relative flex-1 max-w-2xl">
                 <input
                   type="text"
