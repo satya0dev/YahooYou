@@ -22,3 +22,10 @@ export type QuizState = {
   isComplete: boolean;
   personalityType?: PersonalityType;
 };
+
+// Extend the ShareData interface to include files for Web Share API Level 2
+declare global {
+  interface ShareData {
+    files?: File[];
+  }
+}

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Share2, RefreshCw, Search, Mail, ChevronDown } from 'lucide-react';
 import { QuizState, PersonalityType } from '../types';
+import html2canvas from 'html2canvas';
 
 type ResultsPageProps = {
   answers: Record<number, string>;
@@ -54,29 +55,129 @@ function determinePersonalityType(answers: Record<number, string>): PersonalityT
 
 export function ResultsPage({ answers, onRetake }: ResultsPageProps) {
   const personalityType = determinePersonalityType(answers);
+  const resultsRef = useRef<HTMLDivElement>(null);
   
   const handleShare = async () => {
-    const shareData = {
-      title: 'My Yahoo You Results',
-      text: `I'm ${personalityType}! Take the Yahoo You quiz to discover your personalized Yahoo homepage.`,
-      url: window.location.href,
-    };
-
+    if (!resultsRef.current) return;
+    
     try {
-      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-        await navigator.share(shareData);
+      // Show loading indicator or message
+      const shareButton = document.querySelector('.share-button') as HTMLButtonElement;
+      const originalText = shareButton.innerHTML;
+      shareButton.innerHTML = '<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Capturing...';
+      
+      // Scroll to top to ensure we capture the whole page
+      window.scrollTo(0, 0);
+      
+      // Wait a moment for any loading images
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Capture the results page as an image
+      const canvas = await html2canvas(resultsRef.current, {
+        scale: 2, // Higher resolution
+        backgroundColor: '#ffffff',
+        logging: false,
+        allowTaint: true,
+        useCORS: true,
+        imageTimeout: 0, // No timeout for loading images
+        ignoreElements: (element) => {
+          // Ignore elements that shouldn't be in the screenshot
+          return element.tagName === 'BUTTON' && element.textContent?.includes('Take Quiz Again') || false;
+        },
+        onclone: (documentClone) => {
+          // Add watermark or any modifications to the cloned document before capture
+          const watermark = documentClone.createElement('div');
+          watermark.style.position = 'fixed';
+          watermark.style.bottom = '10px';
+          watermark.style.right = '10px';
+          watermark.style.padding = '5px 10px';
+          watermark.style.background = 'rgba(255,255,255,0.7)';
+          watermark.style.borderRadius = '4px';
+          watermark.style.fontSize = '12px';
+          watermark.style.color = 'rgba(0,0,0,0.6)';
+          watermark.textContent = 'yahoo-you.vercel.app';
+          documentClone.body.appendChild(watermark);
+          return documentClone;
+        }
+      });
+      
+      // Convert to blob with higher quality
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob as Blob);
+        }, 'image/png', 0.9); // Higher quality
+      });
+      
+      // Create share data with specific text
+      const shareText = `Hey, see my personalized Yahoo! homepage. I'm ${personalityType}! You can create it too on @https://yahoo-you.vercel.app/`;
+      
+      // Try to use Web Share API with the image
+      if (navigator.share && navigator.canShare) {
+        const file = new File([blob], 'yahoo-personality.png', { type: 'image/png' });
+        const shareData = {
+          title: 'My Yahoo You Results',
+          text: shareText,
+          url: 'https://yahoo-you.vercel.app/',
+          files: [file]
+        };
+        
+        try {
+          if (navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+          } else {
+            // Fallback if can't share with files
+            await navigator.share({
+              title: 'My Yahoo You Results',
+              text: shareText,
+              url: 'https://yahoo-you.vercel.app/'
+            });
+          }
+        } catch (error) {
+          console.error('Error sharing with files:', error);
+          // Try download + clipboard approach
+          fallbackShare(blob, shareText);
+        }
       } else {
-        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
-        alert('Share link copied to clipboard!');
+        // Fallback for browsers without Web Share API
+        fallbackShare(blob, shareText);
       }
+      
+      // Reset button text
+      shareButton.innerHTML = originalText;
     } catch (error) {
-      console.error('Error sharing:', error);
-      alert('To share your results, copy this URL: ' + window.location.href);
+      console.error('Error capturing or sharing:', error);
+      alert('Unable to share image. Please try again.');
+      
+      // Reset share button in case of error
+      const shareButton = document.querySelector('.share-button') as HTMLButtonElement;
+      if (shareButton) {
+        shareButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share Result';
+      }
+    }
+  };
+  
+  const fallbackShare = async (blob: Blob, shareText: string) => {
+    try {
+      // Create a link to download the image
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'yahoo-personality.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Copy share text to clipboard
+      await navigator.clipboard.writeText(shareText);
+      alert('Image saved! Share text copied to clipboard.');
+    } catch (error) {
+      console.error('Fallback sharing error:', error);
+      alert('To share your results, take a screenshot and share it with this text: ' + shareText);
     }
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" ref={resultsRef}>
       {/* Yahoo Header */}
       <header className="bg-white border-b">
         <div className="container mx-auto px-4 py-2">
@@ -169,7 +270,7 @@ export function ResultsPage({ answers, onRetake }: ResultsPageProps) {
               <div className="flex flex-col gap-3">
                 <button
                   onClick={handleShare}
-                  className="flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-full hover:bg-purple-700 transition-colors w-full"
+                  className="share-button flex items-center justify-center gap-2 bg-purple-600 text-white px-6 py-3 rounded-full hover:bg-purple-700 transition-colors w-full"
                 >
                   <Share2 className="w-5 h-5" />
                   Share Result

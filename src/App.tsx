@@ -94,7 +94,7 @@ function App() {
         <div className="text-center mb-12">
           {/* SCMS Bengaluru logo at the top */}
           <div className="mb-8">
-            <img src="/SCMS_Beng.jpeg" alt="SCMS Bengaluru Logo" className="h-24 mx-auto" />
+            <img src="/symb.png" alt="SCMS Bengaluru Logo" className="h-24 mx-auto rounded-md" />
           </div>
           <p className="text-2xl md:text-3xl font-light mb-8">
             What does <span className="mx-2"></span><motion.img 
@@ -139,6 +139,23 @@ function App() {
         <p className="mt-12 text-sm text-white/80">
           Join thousands of others discovering their Yahoo personality! 🌟
         </p>
+        
+        {/* Credits Card */}
+        <div className="mt-8 bg-white/15 backdrop-blur-md rounded-lg p-6 max-w-2xl w-full text-white text-center relative">
+          <img 
+            src="/symlogo.png" 
+            alt="SCMS Logo" 
+            className="absolute top-2 right-2 h-12 w-12 object-cover"
+          />
+          <div className="pt-4">
+            <p className="font-medium mb-4">Made with ❤️ by :</p>
+            <p className="mb-1">Ananya : 22021921014</p>
+            <p className="mb-1">Sameera : 22021291043</p>
+            <p className="mb-1">Garv : 22021921041</p>
+            <p className="mb-1">Krish : 22021921061</p>
+            <p className="mb-1">Pragati : 22021921088</p>
+          </div>
+        </div>
       </div>
     </div>
   );
