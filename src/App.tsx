@@ -62,7 +62,7 @@ function App() {
 
   if (showQuiz && currentQuestion) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-700 via-[#c52f33] to-purple-700 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-purple-800 via-purple-600 to-purple-900 p-4">
         <div className="container mx-auto py-12 flex flex-col items-center justify-center min-h-screen">
           <ProgressBar
             current={quizState.currentQuestion}
@@ -88,7 +88,7 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-700 via-[#c52f33] to-purple-700">
+    <div className="min-h-screen bg-gradient-to-br from-purple-800 via-purple-600 to-purple-900">
       <div className="container mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-screen text-white">
         {/* Header Section */}
         <div className="text-center mb-12">
@@ -109,8 +109,8 @@ function App() {
         </div>
 
         {/* Main Content */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 max-w-2xl w-full mb-12">
-          <p className="text-xl mb-6 text-center">
+        <div className="bg-white/20 backdrop-blur-lg rounded-2xl p-8 max-w-2xl w-full mb-12">
+          <p className="text-xl mb-6 text-center font-medium">
             Take this fun quiz to discover your personalized Yahoo homepage! 🎯
           </p>
           <div className="flex flex-col gap-4 text-center">
